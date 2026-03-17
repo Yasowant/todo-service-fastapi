@@ -5,11 +5,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    # ✅ pre-hash to avoid 72-byte limit
-    hashed = hashlib.sha256(password.encode()).hexdigest()
-    return pwd_context.hash(hashed)
+    sha = hashlib.sha256(password.encode()).digest()  # ✅ FIX
+    return pwd_context.hash(sha)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    hashed = hashlib.sha256(plain_password.encode()).hexdigest()
-    return pwd_context.verify(hashed, hashed_password)
+    sha = hashlib.sha256(plain_password.encode()).digest()  # ✅ FIX
+    return pwd_context.verify(sha, hashed_password)

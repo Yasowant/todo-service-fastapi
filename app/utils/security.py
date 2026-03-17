@@ -1,14 +1,15 @@
 from passlib.context import CryptContext
+import hashlib
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def hash_password(password: str):
-    # truncate to avoid bcrypt 72-byte limit
-    password = password[:72]
-    return pwd_context.hash(password)
+def hash_password(password: str) -> str:
+    # ✅ pre-hash to avoid 72-byte limit
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    return pwd_context.hash(hashed)
 
 
-def verify_password(password: str, hashed_password: str):
-    password = password[:72]
-    return pwd_context.verify(password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    hashed = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(hashed, hashed_password)

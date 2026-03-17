@@ -2,10 +2,13 @@ from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
 
 
-def create_todo(db: Session, todo):
+# ✅ CREATE TODO
+def create_todo(db: Session, todo, user_id: int):
     new_todo = Todo(
         title=todo.title,
-        description=todo.description
+        description=todo.description,
+        completed=False,
+        user_id=user_id   # 🔐 link to user
     )
     db.add(new_todo)
     db.commit()
@@ -13,12 +16,17 @@ def create_todo(db: Session, todo):
     return new_todo
 
 
-def get_all_todos(db: Session):
-    return db.query(Todo).all()
+# ✅ GET ALL TODOS (ONLY USER'S TODOS)
+def get_all_todos(db: Session, user_id: int):
+    return db.query(Todo).filter(Todo.user_id == user_id).all()
 
 
-def update_todo(db: Session, todo_id: int, completed: bool):
-    todo = db.query(Todo).filter(Todo.id == todo_id).first()
+# ✅ UPDATE TODO (ONLY IF OWNER)
+def update_todo(db: Session, todo_id: int, completed: bool, user_id: int):
+    todo = db.query(Todo).filter(
+        Todo.id == todo_id,
+        Todo.user_id == user_id   # 🔐 ownership check
+    ).first()
 
     if not todo:
         return None
@@ -30,8 +38,12 @@ def update_todo(db: Session, todo_id: int, completed: bool):
     return todo
 
 
-def delete_todo(db: Session, todo_id: int):
-    todo = db.query(Todo).filter(Todo.id == todo_id).first()
+# ✅ DELETE TODO (ONLY IF OWNER)
+def delete_todo(db: Session, todo_id: int, user_id: int):
+    todo = db.query(Todo).filter(
+        Todo.id == todo_id,
+        Todo.user_id == user_id   # 🔐 ownership check
+    ).first()
 
     if not todo:
         return None
@@ -39,4 +51,4 @@ def delete_todo(db: Session, todo_id: int):
     db.delete(todo)
     db.commit()
 
-    return todo
+    return True

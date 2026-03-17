@@ -1,11 +1,15 @@
-from sqlalchemy import Column, Integer, String, Boolean
+import uuid
+from sqlalchemy import Column, String, Boolean, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from app.database.database import Base
 
 
 class Todo(Base):
     __tablename__ = "todos"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     title = Column(String, nullable=False)
     description = Column(String)
     completed = Column(Boolean, default=False)
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))

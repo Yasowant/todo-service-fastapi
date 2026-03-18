@@ -31,3 +31,9 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     tokens = login_user(db, user.email, user.password)
 
     return tokens
+
+@router.post("/logout")
+def logout():
+    return{
+        "message":"Logout successful.Please remove the token from client storage"
+    }

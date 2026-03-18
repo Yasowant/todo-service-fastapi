@@ -13,7 +13,6 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
-# ⚠️ Make sure this matches your route prefix
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
@@ -30,22 +29,29 @@ def get_current_user(
         if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
+                detail="Invalid token"
             )
 
-        # ✅ UUID → DO NOT convert to int
+        # ✅ UUID safe (no int conversion)
         user = db.query(User).filter(User.id == user_id).first()
 
-        if not user:
+        if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
 
-        return user  # ✅ RETURN FULL USER OBJECT
+        return user
 
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
+        )
+
+    except Exception:
+        # 🔥 extra safety (prevents 500 crashes)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
         )

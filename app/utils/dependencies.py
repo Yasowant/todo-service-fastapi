@@ -13,7 +13,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# ⚠️ Make sure this matches your route prefix
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(
@@ -21,26 +22,27 @@ def get_current_user(
     db: Session = Depends(get_db)
 ):
     try:
+        # ✅ Decode JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
         user_id = payload.get("sub")
 
-        if user_id is None:
+        if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
+                detail="Invalid token payload"
             )
 
-        # ✅ fetch full user from DB
-        user = db.query(User).filter(User.id == int(user_id)).first()
+        # ✅ UUID → DO NOT convert to int
+        user = db.query(User).filter(User.id == user_id).first()
 
         if not user:
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
 
-        return user  # ✅ RETURN FULL USER
+        return user  # ✅ RETURN FULL USER OBJECT
 
     except JWTError:
         raise HTTPException(

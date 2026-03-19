@@ -11,5 +11,7 @@ class Todo(Base):
     title = Column(String, nullable=False)
     description = Column(String)
     completed = Column(Boolean, default=False)
-
+    priority=Column(String,default="medium")
+    category=Column(String,default="personal")
+    due_date=Column(String,nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))

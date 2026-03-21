@@ -1,22 +1,35 @@
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
+from app.services.ai_service import predict_priority
 
-
-# 🔹 CREATE
 def create_todo(db: Session, todo, user_id: UUID):
+
+    # ✅ handle both dict (AI) and object (manual)
+    title = todo.get("title") if isinstance(todo, dict) else todo.title
+    description = todo.get("description") if isinstance(todo, dict) else todo.description
+    priority = todo.get("priority") if isinstance(todo, dict) else todo.priority
+    category = todo.get("category") if isinstance(todo, dict) else getattr(todo, "category", None)
+    due_date = todo.get("due_date") if isinstance(todo, dict) else getattr(todo, "due_date", None)
+
+    # 🧠 AI fallback priority
+    if not priority:
+        priority = predict_priority(title)
+
     new_todo = Todo(
-        title=todo.title,
-        description=todo.description,
+        title=title,
+        description=description,
         completed=False,
-        priority=todo.priority,
-        category=todo.category,
-        due_date=todo.due_date,
+        priority=priority,
+        category=category,
+        due_date=due_date,
         user_id=user_id
     )
+
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
+
     return new_todo
 
 

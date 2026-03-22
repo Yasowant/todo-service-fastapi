@@ -24,12 +24,10 @@ def chat_with_ai(messages):
             json={
                 "model": "meta-llama/llama-3-8b-instruct",
                 "messages": messages,
+                "temperature": 0.3  # ✅ more predictable output
             },
             timeout=15
         )
-
-        print("STATUS:", response.status_code)
-        print("RAW:", response.text)
 
         data = response.json()
 
@@ -45,19 +43,29 @@ def chat_with_ai(messages):
         print("ERROR:", str(e))
         return "Fallback active 🚀"
 
+
 # ==============================
-# ✨ GENERATE TODO
+# ✨ GENERATE TODO (UPDATED)
 # ==============================
 def generate_todo(text: str):
     prompt = f"""
-    Convert into JSON:
+    Convert the following into STRICT JSON.
+
+    Text:
     "{text}"
 
-    Format:
+    Rules:
+    - Return ONLY valid JSON (no explanation)
+    - Keys: title, description, priority, status
+    - priority must be: low | medium | high
+    - status must be: pending | in_progress | completed
+
+    Example:
     {{
-      "title": "",
-      "description": "",
-      "priority": "low|medium|high"
+      "title": "Buy groceries",
+      "description": "Milk, eggs, bread",
+      "priority": "medium",
+      "status": "pending"
     }}
     """
 
@@ -66,33 +74,57 @@ def generate_todo(text: str):
     ])
 
     try:
-        return json.loads(res)
-    except:
+        parsed = json.loads(res)
+
+        # ✅ safety fallback
+        return {
+            "title": parsed.get("title", text),
+            "description": parsed.get("description", f"Task: {text}"),
+            "priority": validate_priority(parsed.get("priority")),
+            "status": validate_status(parsed.get("status"))
+        }
+
+    except Exception:
         return {
             "title": text,
             "description": f"Task: {text}",
-            "priority": "medium"
+            "priority": "medium",
+            "status": "pending"
         }
 
 
 # ==============================
-# 📊 PRIORITY
+# 📊 PRIORITY (SAFE)
 # ==============================
 def predict_priority(title: str):
     prompt = f"""
-    Decide priority:
+    Decide priority for:
     "{title}"
 
-    Only return: low, medium, high
+    Only return one word: low, medium, or high
     """
 
     res = chat_with_ai([
         {"role": "user", "content": prompt}
     ])
 
-    res = res.strip().lower()
+    return validate_priority(res)
 
-    if res not in ["low", "medium", "high"]:
+
+# ==============================
+# ✅ VALIDATORS (IMPORTANT 🔥)
+# ==============================
+def validate_priority(value):
+    if not value:
         return "medium"
 
-    return res
+    value = value.strip().lower()
+    return value if value in ["low", "medium", "high"] else "medium"
+
+
+def validate_status(value):
+    if not value:
+        return "pending"
+
+    value = value.strip().lower()
+    return value if value in ["pending", "in_progress", "completed"] else "pending"

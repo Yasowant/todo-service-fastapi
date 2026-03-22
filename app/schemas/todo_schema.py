@@ -8,7 +8,7 @@ from datetime import datetime
 class TodoCreate(BaseModel):
     title: str
     description: Optional[str] = None
-
+    status: Optional[str] = "pending"
     priority: Optional[str] = "medium"
     category: Optional[str] = "personal"
     due_date: Optional[datetime] = None
@@ -18,8 +18,7 @@ class TodoCreate(BaseModel):
 class TodoUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    completed: Optional[bool] = None
-
+    status: Optional[str] = None
     priority: Optional[str] = None
     category: Optional[str] = None
     due_date: Optional[datetime] = None
@@ -27,11 +26,10 @@ class TodoUpdate(BaseModel):
 
 # 🔹 RESPONSE
 class TodoResponse(BaseModel):
-    id: UUID   # ✅ FIXED
+    id: UUID
     title: str
     description: Optional[str]
-    completed: bool
-
+    status: str
     priority: str
     category: str
     due_date: Optional[datetime]

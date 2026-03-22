@@ -12,7 +12,7 @@ from app.services.ai_service import generate_todo
 router = APIRouter(prefix="/todos", tags=["Todos"])
 
 
-# 🔥 AI CREATE TODO (IMPORTANT)
+# 🔥 AI CREATE
 @router.post("/ai", response_model=TodoResponse)
 def create_todo_ai(
     data: dict,
@@ -26,21 +26,32 @@ def create_todo_ai(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 🔹 NORMAL CREATE
+# 🔹 CREATE
 @router.post("/", response_model=TodoResponse)
-def create_todo(todo: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_todo(
+    todo: TodoCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     return todo_service.create_todo(db, todo, current_user.id)
 
 
 # 🔹 GET ALL
 @router.get("/", response_model=list[TodoResponse])
-def get_todos(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_todos(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     return todo_service.get_all_todos(db, current_user.id)
 
 
 # 🔹 GET ONE
 @router.get("/{todo_id}", response_model=TodoResponse)
-def get_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_todo(
+    todo_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     todo = todo_service.get_todo(db, todo_id, current_user.id)
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -49,7 +60,12 @@ def get_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = 
 
 # 🔹 UPDATE
 @router.put("/{todo_id}", response_model=TodoResponse)
-def update_todo(todo_id: UUID, todo: TodoUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_todo(
+    todo_id: UUID,
+    todo: TodoUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     updated = todo_service.update_todo(db, todo_id, todo, current_user.id)
     if not updated:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -58,7 +74,11 @@ def update_todo(todo_id: UUID, todo: TodoUpdate, db: Session = Depends(get_db), 
 
 # 🔹 DELETE
 @router.delete("/{todo_id}")
-def delete_todo(todo_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def delete_todo(
+    todo_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     deleted = todo_service.delete_todo(db, todo_id, current_user.id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Todo not found")

@@ -18,13 +18,15 @@ def chat(data: dict, db: Session = Depends(get_db), user=Depends(get_current_use
         return {"error": str(e)}
 
 
-# ✨ Auto-create todo
 @router.post("/generate-todo")
 def ai_generate(data: dict):
+    if "text" not in data:
+        return {"error": "text is required"}
     return generate_todo(data["text"])
 
 
-# 📊 Priority prediction
 @router.post("/predict-priority")
 def ai_priority(data: dict):
+    if "title" not in data:
+        return {"error": "title is required"}
     return {"priority": predict_priority(data["title"])}

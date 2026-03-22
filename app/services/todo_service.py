@@ -3,23 +3,28 @@ from sqlalchemy.orm import Session
 from app.models.todo_model import Todo
 from app.services.ai_service import predict_priority
 
+
+# 🔹 CREATE
 def create_todo(db: Session, todo, user_id: UUID):
 
-    # ✅ handle both dict (AI) and object (manual)
     title = todo.get("title") if isinstance(todo, dict) else todo.title
     description = todo.get("description") if isinstance(todo, dict) else todo.description
     priority = todo.get("priority") if isinstance(todo, dict) else todo.priority
     category = todo.get("category") if isinstance(todo, dict) else getattr(todo, "category", None)
     due_date = todo.get("due_date") if isinstance(todo, dict) else getattr(todo, "due_date", None)
+    status = todo.get("status") if isinstance(todo, dict) else getattr(todo, "status", None)
 
-    # 🧠 AI fallback priority
+    # 🧠 AI fallback
     if not priority:
         priority = predict_priority(title)
+
+    if not status:
+        status = "pending"
 
     new_todo = Todo(
         title=title,
         description=description,
-        completed=False,
+        status=status,
         priority=priority,
         category=category,
         due_date=due_date,
@@ -38,7 +43,7 @@ def get_all_todos(db: Session, user_id: UUID):
     return db.query(Todo).filter(Todo.user_id == user_id).all()
 
 
-# 🔹 GET SINGLE (Optional but useful)
+# 🔹 GET ONE
 def get_todo(db: Session, todo_id: UUID, user_id: UUID):
     return db.query(Todo).filter(
         Todo.id == todo_id,
@@ -46,7 +51,7 @@ def get_todo(db: Session, todo_id: UUID, user_id: UUID):
     ).first()
 
 
-# 🔹 UPDATE (🔥 FULL FLEXIBLE UPDATE)
+# 🔹 UPDATE
 def update_todo(db: Session, todo_id: UUID, todo_data, user_id: UUID):
     todo = db.query(Todo).filter(
         Todo.id == todo_id,
@@ -56,15 +61,14 @@ def update_todo(db: Session, todo_id: UUID, todo_data, user_id: UUID):
     if not todo:
         return None
 
-    # ✅ Only update fields that are provided
     if todo_data.title is not None:
         todo.title = todo_data.title
 
     if todo_data.description is not None:
         todo.description = todo_data.description
 
-    if todo_data.completed is not None:
-        todo.completed = todo_data.completed
+    if todo_data.status is not None:
+        todo.status = todo_data.status
 
     if todo_data.priority is not None:
         todo.priority = todo_data.priority
